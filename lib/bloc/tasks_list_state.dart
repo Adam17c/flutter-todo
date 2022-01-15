@@ -8,25 +8,13 @@ class TasksInitialState extends TasksListState {}
 class TasksLoadingState extends TasksListState {}
 
 class ShowOnlyUncompletedTasks extends TasksListState {
-  final List<Task> tasks;
+  final List<Task> uncompletedTasks;
 
-  ShowOnlyUncompletedTasks(this.tasks);
+  ShowOnlyUncompletedTasks(this.uncompletedTasks);
 }
 
 class ShowCompletedTasks extends TasksListState {
-  final List<Task> tasks;
+  final List<Task> umcompletedAndCOmpletedTasks;
 
-  ShowCompletedTasks(this.tasks);
-}
-
-class ShowOtherUserTasks extends TasksListState {
-  final List<Task> tasks;
-
-  ShowOtherUserTasks(this.tasks);
-}
-
-class ShowCompletedAndOtherUserTasks extends TasksListState {
-  final List<Task> tasks;
-
-  ShowCompletedAndOtherUserTasks(this.tasks);
+  ShowCompletedTasks(this.umcompletedAndCOmpletedTasks);
 }

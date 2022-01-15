@@ -1,36 +1,21 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:todo_app_ver1/models/task.dart';
 import 'package:todo_app_ver1/models/todo.dart';
-import 'models/user_model.dart';
 
 class Database {
   static final FirebaseFirestore _firebaseFirestore =
       FirebaseFirestore.instance;
 
-  static postUserToFirestore(UserModel userModel) async {
-    //FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-
-    await _firebaseFirestore
-        .collection("users")
-        .doc(userModel.uid)
-        .set(userModel.toMap());
-  }
-
   static postTaskToFirestore(Task task) async {
-    //FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-
     await _firebaseFirestore.collection("tasks").doc(task.id).set(task.toMap());
   }
 
   static postTodoToFirestore(Todo todo) async {
-    //FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-
     await _firebaseFirestore.collection("todos").doc(todo.id).set(todo.toMap());
   }
 
   static updateTask(Task task) async {
-    //FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-
     await _firebaseFirestore.collection("tasks").doc(task.id).update({
       "title": task.title,
       "description": task.description,
@@ -40,8 +25,6 @@ class Database {
   }
 
   static updateTodo(Todo todo) async {
-    //FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-
     await _firebaseFirestore
         .collection("todos")
         .doc(todo.id)
@@ -49,28 +32,20 @@ class Database {
   }
 
   static deleteTask(Task task) async {
-    await _firebaseFirestore.collection("tasks").doc(task.id).delete()
-        //.catchError((error) => print("Failed to delete user: $error"))
-        ;
+    await _firebaseFirestore.collection("tasks").doc(task.id).delete();
   }
 
   static deleteTodo(Todo todo) async {
-    await _firebaseFirestore.collection("todos").doc(todo.id).delete()
-        //.catchError((error) => print("Failed to delete user: $error"))
-        ;
+    await _firebaseFirestore.collection("todos").doc(todo.id).delete();
   }
 
-  static Future<List<Task>> getComplitedTasksForUser(
-      UserModel userModel) async {
-    //FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-
+  static Future<List<Task>> getComplitedTasksForUser(User user) async {
     List<Task> tasks = List.empty(growable: true);
 
     QuerySnapshot query = await _firebaseFirestore
         .collection("tasks")
-        .where('userId', isEqualTo: userModel.uid)
+        .where('userId', isEqualTo: user.uid)
         .where('isDone', isEqualTo: true)
-        //.orderBy('timestamp')
         .get();
 
     var docs = query.docs;
@@ -80,38 +55,18 @@ class Database {
           (doc as DocumentSnapshot<Map>).data() as Map<String, dynamic>;
       tasks.add(Task.fromMap(data));
     }
-    //tasks
-    //    .sort((a, b) =>  a.timestamp!.toDate().compareTo(b.timestamp!.toDate())
-    //    );
 
-    tasks.sort((a, b) {
-      int result;
-      if (a.timestamp == null) {
-        result = 1;
-      } else if (b.timestamp == null) {
-        result = -1;
-      } else {
-        // Ascending Order
-        result = a.timestamp!.toDate().compareTo(b.timestamp!.toDate());
-      }
-      return result;
-    });
-    //Map<String, dynamic> data = res.data as Map<String, dynamic>;
-    //return Task.fromMap(data);
+    Task.sortByTimestamp(tasks);
     return tasks;
   }
 
-  static Future<List<Task>> getUncomplitedTasksForUser(
-      UserModel userModel) async {
-    //FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-
+  static Future<List<Task>> getUncomplitedTasksForUser(User user) async {
     List<Task> tasks = List.empty(growable: true);
 
     QuerySnapshot query = await _firebaseFirestore
         .collection("tasks")
-        .where('userId', isEqualTo: userModel.uid)
+        .where('userId', isEqualTo: user.uid)
         .where('isDone', isEqualTo: false)
-        //.orderBy('timestamp')
         .get();
 
     var docs = query.docs;
@@ -121,24 +76,8 @@ class Database {
           (doc as DocumentSnapshot<Map>).data() as Map<String, dynamic>;
       tasks.add(Task.fromMap(data));
     }
-    //tasks
-    //    .sort((a, b) =>  a.timestamp!.toDate().compareTo(b.timestamp!.toDate())
-    //    );
 
-    tasks.sort((a, b) {
-      int result;
-      if (a.timestamp == null) {
-        result = 1;
-      } else if (b.timestamp == null) {
-        result = -1;
-      } else {
-        // Ascending Order
-        result = a.timestamp!.toDate().compareTo(b.timestamp!.toDate());
-      }
-      return result;
-    });
-    //Map<String, dynamic> data = res.data as Map<String, dynamic>;
-    //return Task.fromMap(data);
+    Task.sortByTimestamp(tasks);
     return tasks;
   }
 
@@ -159,7 +98,6 @@ class Database {
     }
 
     todos.sort((a, b) => a.order.compareTo(b.order));
-
     return todos;
   }
 }

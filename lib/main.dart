@@ -1,11 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:todo_app_ver1/screens/sign_up_screen.dart';
-import 'package:todo_app_ver1/screens/task_edit_screen.dart';
-import 'package:todo_app_ver1/screens/tasks_screen.dart';
-
+import 'package:provider/provider.dart';
 import 'firebase_options.dart';
-import 'models/task.dart';
 import 'screens/login_screen.dart';
 
 void main() async {
@@ -20,16 +16,32 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
+  final ThemeMode mode = ThemeMode.dark;
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      //home: const TasksScreen()
-      //home: TaskEditScreen(
-      //    task: Task(id: 1, title: "title", description: "description")),
-      home: LoginScreen(),
-      //home: SignUpScreen(),
-    );
+    return ChangeNotifierProvider(
+        create: (context) => ThemeController(),
+        builder: (context, _) {
+          return MaterialApp(
+            themeMode: Provider.of<ThemeController>(context).themeMode,
+            darkTheme: ThemeData(
+                brightness: Brightness.dark,
+                appBarTheme: AppBarTheme(color: Colors.greenAccent)),
+            debugShowCheckedModeBanner: false,
+            home: const LoginScreen(),
+          );
+        });
+  }
+}
+
+class ThemeController extends ChangeNotifier {
+  ThemeMode themeMode = ThemeMode.dark;
+
+  bool isDarkMode() => themeMode == ThemeMode.dark;
+
+  void changeTheme(bool toDark) {
+    themeMode = toDark ? ThemeMode.dark : ThemeMode.light;
+    notifyListeners();
   }
 }

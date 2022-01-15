@@ -1,10 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:todo_app_ver1/databse.dart';
-import 'package:todo_app_ver1/models/user_model.dart';
 import 'package:todo_app_ver1/screens/login_screen.dart';
-import 'package:todo_app_ver1/screens/tasks_screen.dart';
-
 import '../auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -75,7 +71,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       validator: (email) {
         final regex = RegExp(r'\w+@\w+\.\w+');
         if (email!.isEmpty) {
-          return 'We need an email address';
+          return 'Please enter email address';
         } else if (!regex.hasMatch(email)) {
           return "That doesn't look like an email address";
         } else {
@@ -117,14 +113,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         autocorrect: false,
         validator: (value) {
           if (value != passwordTextController.text) {
-            print("${value}, ${passwordTextController.text}");
             return "Password doesn't match";
           }
           return null;
         },
-        /*onSaved: (value) {
-          confirmPasswordTextController.text = value!;
-        },*/
         textInputAction: TextInputAction.done,
         decoration: InputDecoration(
           prefixIcon: const Icon(Icons.vpn_key),
@@ -150,13 +142,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
             bool res;
             res = await authService.signUpWithEmail(emailTextController.text,
                 passwordTextController.text, nameTextController.text);
-            //.then((value) => addUserToDatabse());
             if (res) {
-              addUserToDatabse();
               Navigator.push<void>(
                   context,
                   MaterialPageRoute<void>(
-                      builder: (BuildContext context) => LoginScreen()));
+                      builder: (BuildContext context) => const LoginScreen()));
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                 content: Text("Registration succeeded"),
               ));
@@ -177,9 +167,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blueAccent,
-        leading: const BackButton(),
-      ),
+          backgroundColor: Colors.blueAccent,
+          leading: const BackButton(),
+          actions: const []),
       body: Center(
         child: SingleChildScrollView(
           child: Container(
@@ -206,18 +196,5 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
       ),
     );
-  }
-
-  addUserToDatabse() async {
-    User? user = FirebaseAuth.instance.currentUser;
-
-    UserModel userModel = UserModel();
-
-    // writing all the values
-    userModel.email = user!.email;
-    userModel.uid = user.uid;
-    userModel.name = nameTextController.text;
-
-    Database.postUserToFirestore(userModel);
   }
 }

@@ -1,83 +1,63 @@
 import 'package:bloc/bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:meta/meta.dart';
 import 'package:todo_app_ver1/models/task.dart';
-import 'package:todo_app_ver1/models/user_model.dart';
 
 import '../databse.dart';
 
 part 'tasks_list_event.dart';
 part 'tasks_list_state.dart';
 
-enum TypeOfTasks { uncompleted, completed, otherUser }
+enum TypeOfTasks { uncompleted, completed }
 
 class TasksListBloc extends Bloc<TasksListEvent, TasksListState> {
-  final UserModel user;
+  final User user;
 
-  TasksListBloc(this.user) : super(TasksInitialState()) {
-    Future<List<Task>> getTasksAfterSecond(TypeOfTasks type) async {
-      List<Future> futures = List.empty(growable: true);
-      Future<List<Task>> newTasks;
+  Future<List<Task>> getTasksAfterSecond(TypeOfTasks type) async {
+    List<Future> futures = List.empty(growable: true);
+    Future<List<Task>> newTasks;
 
-      switch (type) {
-        case TypeOfTasks.uncompleted:
-          newTasks = Database.getUncomplitedTasksForUser(user);
-          break;
-        case TypeOfTasks.completed:
-          newTasks = Database.getComplitedTasksForUser(user);
-          break;
-        //case TypeOfTasks.otherUser:
-        // TODO: Handle this case.
-        //break;
-        default:
-          newTasks = Database.getUncomplitedTasksForUser(user);
-          break;
-      }
-
-      futures.add(Future.delayed(const Duration(seconds: 1)));
-      futures.add(newTasks);
-      await Future.wait(futures);
-
-      return newTasks;
+    switch (type) {
+      case TypeOfTasks.uncompleted:
+        newTasks = Database.getUncomplitedTasksForUser(user);
+        break;
+      case TypeOfTasks.completed:
+        newTasks = Database.getComplitedTasksForUser(user);
+        break;
     }
 
-    on<TasksListEvent>((event, emit) {
+    futures.add(Future.delayed(const Duration(seconds: 1)));
+    futures.add(newTasks);
+    await Future.wait(futures);
+
+    return newTasks;
+  }
+
+  TasksListBloc(this.user) : super(TasksInitialState()) {
+    on<TasksListEvent>((event, emit) async {
       if (event is AddUncompletedTasks) {
-        getTasksAfterSecond(TypeOfTasks.uncompleted)
+        emit(TasksLoadingState());
+        await getTasksAfterSecond(TypeOfTasks.uncompleted)
             .then((value) => emit(ShowOnlyUncompletedTasks(value)));
-      }
-
-      if (event is AddCompletedTasks) {
-        if (state is ShowOnlyUncompletedTasks) {
+      } else if (event is AddCompletedTasks &&
+          state is ShowOnlyUncompletedTasks) {
+        {
+          List<Task> tasks =
+              List.from((state as ShowOnlyUncompletedTasks).uncompletedTasks)
+                ..removeWhere((task) => task.isDone == true);
           emit(TasksLoadingState());
-          List<Task> tasks = List.empty(growable: true)
-            ..addAll((state as ShowOnlyUncompletedTasks).tasks);
-          getTasksAfterSecond(TypeOfTasks.completed)
-              .then((value) => emit(ShowCompletedTasks(tasks)));
+          await getTasksAfterSecond(TypeOfTasks.completed).then((value) => {
+                tasks.addAll(value),
+                Task.sortByTimestamp(tasks),
+                emit(ShowCompletedTasks(tasks))
+              });
         }
-        if (state is ShowOtherUserTasks) {
-          emit(TasksLoadingState());
-
-          List<Task> tasks = List.empty(growable: true)
-            ..addAll((state as ShowOtherUserTasks).tasks);
-          getTasksAfterSecond(TypeOfTasks.completed)
-              .then((value) => emit(ShowCompletedAndOtherUserTasks(tasks)));
-        }
-      }
-
-      if (event is AddOtherUserTasks) {
-        if (state is ShowOnlyUncompletedTasks) {
-          emit(TasksLoadingState());
-          List<Task> tasks = List.empty(growable: true)
-            ..addAll((state as ShowOnlyUncompletedTasks).tasks);
-          getTasksAfterSecond(TypeOfTasks.otherUser)
-              .then((value) => emit(ShowOtherUserTasks(tasks)));
-        }
+      } else if (event is HideCompletedTasks && state is ShowCompletedTasks) {
         if (state is ShowCompletedTasks) {
-          emit(TasksLoadingState());
-          List<Task> tasks = List.empty(growable: true)
-            ..addAll((state as ShowCompletedTasks).tasks);
-          getTasksAfterSecond(TypeOfTasks.otherUser)
-              .then((value) => emit(ShowCompletedAndOtherUserTasks(tasks)));
+          List<Task> tasks = List.from(
+              (state as ShowCompletedTasks).umcompletedAndCOmpletedTasks)
+            ..removeWhere((task) => task.isDone == true);
+          emit(ShowOnlyUncompletedTasks(tasks));
         }
       }
     });

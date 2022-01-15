@@ -7,8 +7,4 @@ class AddUncompletedTasks extends TasksListEvent {}
 
 class AddCompletedTasks extends TasksListEvent {}
 
-class AddOtherUserTasks extends TasksListEvent {}
-
-class RemoveCompletedTasks extends TasksListEvent {}
-
-class RemoveOtherUserTasks extends TasksListEvent {}
+class HideCompletedTasks extends TasksListEvent {}

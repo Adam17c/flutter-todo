@@ -1,13 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:todo_app_ver1/auth_service.dart';
-import 'package:todo_app_ver1/models/user_model.dart';
 import 'package:todo_app_ver1/screens/sign_up_screen.dart';
 import 'package:todo_app_ver1/screens/tasks_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({Key? key}) : super(key: key);
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -43,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
       validator: (email) {
         final regex = RegExp(r'\w+@\w+\.\w+');
         if (email!.isEmpty) {
-          return 'We need an email address';
+          return 'Please enter email address';
         } else if (!regex.hasMatch(email)) {
           return "That doesn't look like an email address";
         } else {
@@ -66,9 +64,6 @@ class _LoginScreenState extends State<LoginScreen> {
           )),
       controller: passwordTextController,
       autovalidateMode: AutovalidateMode.onUserInteraction,
-      //onSaved: (text) {
-      //  passwordTextController.text = text!;
-      //},
       validator: (password) {
         if (password!.length < 6) {
           return "Password is too short";
@@ -86,9 +81,6 @@ class _LoginScreenState extends State<LoginScreen> {
         minWidth: MediaQuery.of(context).size.width,
         onPressed: () async {
           if (_key.currentState!.validate()) {
-            // Using Text Controller
-            print('Text Controller ${emailTextController.text}');
-            // Using on saved
             _key.currentState!.save();
 
             final AuthService authService = AuthService(
@@ -99,47 +91,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
             switch (res) {
               case SignInResult.invalidEmail:
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content:
-                        Text('Your email address appears to be malformed.'),
-                  ),
-                );
+                showSnackbar('Wrong email or password.');
                 break;
               case SignInResult.userDisabled:
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('User with this email has been disabled.'),
-                ));
+                showSnackbar('User with this email has been disabled.');
                 break;
               case SignInResult.userNotFound:
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text("User with this email doesn't exist."),
-                ));
+                showSnackbar("User with this email doesn't exist.");
                 break;
               case SignInResult.emailAlreadyInUse:
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('An undefined Error happened.'),
-                ));
+                showSnackbar('An undefined error happened.');
                 break;
               case SignInResult.wrongPassword:
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Your password is wrong.'),
-                ));
+                showSnackbar('Wrong email or password.');
                 break;
               case SignInResult.success:
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(
-                      'Successfully logged ${FirebaseAuth.instance.currentUser!.email}'),
-                ));
                 Navigator.push<void>(
                     context,
                     MaterialPageRoute<void>(
                         builder: (BuildContext context) => TasksScreen(
-                            user: UserModel(
-                                uid: FirebaseAuth.instance.currentUser!.uid,
-                                email: FirebaseAuth.instance.currentUser!.email,
-                                name: FirebaseAuth
-                                    .instance.currentUser!.displayName))));
+                            user: FirebaseAuth.instance.currentUser!)));
                 break;
             }
           }
@@ -205,5 +176,11 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  void showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+    ));
   }
 }

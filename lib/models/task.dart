@@ -38,4 +38,18 @@ class Task {
       'isDone': isDone
     };
   }
+
+  static void sortByTimestamp(List<Task> tasks) {
+    tasks.sort((a, b) {
+      int result;
+      if (a.timestamp == null) {
+        result = 1;
+      } else if (b.timestamp == null) {
+        result = -1;
+      } else {
+        result = a.timestamp!.toDate().compareTo(b.timestamp!.toDate());
+      }
+      return result;
+    });
+  }
 }

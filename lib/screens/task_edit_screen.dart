@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:todo_app_ver1/databse.dart';
 import 'package:todo_app_ver1/models/task.dart';
 import 'package:todo_app_ver1/models/todo.dart';
-import 'package:todo_app_ver1/models/user_model.dart';
 import 'package:todo_app_ver1/screens/tasks_screen.dart';
 import 'package:uuid/uuid.dart';
 import 'package:intl/intl.dart';
@@ -62,8 +61,14 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
     _titleFocus.dispose();
     _descriptionFocus.dispose();
     _newTodoFocus.dispose();
+    _titleController.dispose();
+    _descriptionController.dispose();
 
     super.dispose();
+  }
+
+  bool checkIfDarkModeIsOn() {
+    return Theme.of(context).brightness == Brightness.dark;
   }
 
   @override
@@ -72,7 +77,8 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
       focusNode: _titleFocus,
       onSubmitted: (value) {
         setState(() {
-          _titleController.text = value;
+          widget.task.title = value;
+          Database.updateTask(widget.task);
         });
         _descriptionFocus.requestFocus();
       },
@@ -80,13 +86,10 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
       decoration: const InputDecoration(
         hintText: "Enter Task Title",
         border: InputBorder.none,
-        //contentPadding:
-        //    EdgeInsets.symmetric(horizontal: 24.0, vertical: 10.0)
       ),
       style: const TextStyle(
         fontSize: 26.0,
         fontWeight: FontWeight.bold,
-        color: Color(0xFF211551),
       ),
     );
 
@@ -94,32 +97,29 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
       focusNode: _descriptionFocus,
       onSubmitted: (value) {
         setState(() {
-          _descriptionController.text = value;
+          widget.task.description = value;
+          Database.updateTask(widget.task);
         });
         _newTodoFocus.requestFocus();
       },
       controller: _descriptionController,
       decoration: const InputDecoration(
-        hintText: "Enter Description for the task...",
+        hintText: "Enter Task Description",
         border: InputBorder.none,
-        contentPadding: EdgeInsets.symmetric(
-            //horizontal: 24.0,
-            ),
+        contentPadding: EdgeInsets.symmetric(),
       ),
+      style: const TextStyle(fontSize: 18),
     );
 
     final dateTimeButton = GestureDetector(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Container(
-          decoration: const BoxDecoration(
-              border: Border(
-                top: BorderSide(width: 1.0, color: Colors.black),
-                left: BorderSide(width: 1.0, color: Colors.black),
-                right: BorderSide(width: 1.0, color: Colors.black),
-                bottom: BorderSide(width: 1.0, color: Colors.black),
-              ),
-              borderRadius: BorderRadius.all(Radius.circular(5))),
+          decoration: BoxDecoration(
+              border: Border.all(
+                  width: 1.0,
+                  color: checkIfDarkModeIsOn() ? Colors.white60 : Colors.black),
+              borderRadius: const BorderRadius.all(Radius.circular(5))),
           child: Center(
             child: Padding(
               padding: const EdgeInsets.all(15.0),
@@ -132,7 +132,13 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
                                   .format(widget.task.timestamp!.toDate())
                               : "Pick your deadline"),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Color(0xFF000000))),
+                      style: TextStyle(
+                          color: widget.task.timestamp != null
+                              ? checkIfDarkModeIsOn()
+                                  ? Colors.white60
+                                  : Colors.black
+                              : Colors.grey[700],
+                          fontSize: 18)),
                   Expanded(
                     child: Container(),
                   ),
@@ -150,42 +156,42 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
             firstDate: DateTime(2021),
             lastDate: DateTime(2030));
         if (pickedDate != null) {
-          widget.task.timestamp = Timestamp.fromDate(pickedDate);
           setState(() {
+            widget.task.timestamp = Timestamp.fromDate(pickedDate);
             Database.updateTask(widget.task);
           });
-          //Database.updateTask(wi
-          //))
         }
       },
       onLongPress: () {
-        Tooltip(message: "Delete deadline");
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text("Deleting Deadline"),
+                content: const Text("Do you want ot delete the Deadline?"),
+                actions: [
+                  TextButton(
+                    child: const Text('Yes'),
+                    onPressed: () {
+                      setState(() {
+                        widget.task.timestamp = null;
+                        Database.updateTask(widget.task);
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                  TextButton(
+                    child: const Text('No'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  )
+                ],
+              );
+            });
       },
     );
 
-    final dateTimeFiled = Row(
-      children: [
-        const Text("Datetime:"),
-        GestureDetector(
-          child: Text(widget.task.timestamp.toString()),
-          onTap: () async {
-            DateTime? pickedDate = await showDatePicker(
-                context: context,
-                initialDate: DateTime.now(),
-                firstDate: DateTime(2021),
-                lastDate: DateTime(2030));
-            if (pickedDate != null) {
-              widget.task.timestamp = Timestamp.fromDate(pickedDate);
-              setState(() {
-                Database.updateTask(widget.task);
-              });
-              //Database.updateTask(wi
-              //))
-            }
-          },
-        )
-      ],
-    );
     final newTodo = Row(children: [
       SizedBox(
         height: 24.0,
@@ -193,7 +199,6 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
         child: Checkbox(
           value: false,
           onChanged: (value) {},
-          //),
         ),
       ),
       const SizedBox(
@@ -202,9 +207,7 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
       Expanded(
         child: TextField(
             focusNode: _newTodoFocus,
-            //controller: TextEditingController()..text = "",
             onSubmitted: (value) async {
-              // Check if the field is not empty
               if (value != "") {
                 Todo newTodo = Todo(
                     id: const Uuid().v4(),
@@ -221,10 +224,18 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
             decoration: const InputDecoration(
               hintText: "Enter Todo item",
               border: InputBorder.none,
-              //contentPadding: EdgeInsets.symmetric(horizontal: 24.0)),
             )),
       )
     ]);
+
+    void goBackToTaskList() {
+      Navigator.push<void>(
+          context,
+          MaterialPageRoute<void>(
+            builder: (BuildContext context) =>
+                TasksScreen(user: FirebaseAuth.instance.currentUser!),
+          ));
+    }
 
     return Scaffold(
         appBar: AppBar(
@@ -232,7 +243,6 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
           backgroundColor: Colors.blueAccent,
           leading: BackButton(
             onPressed: () {
-              //addTaskToDatabse();
               if (_titleController.text != "" ||
                   _descriptionController.text != "" ||
                   _todos.isNotEmpty) {
@@ -246,17 +256,7 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
               } else {
                 Database.deleteTask(widget.task);
               }
-              //Navigator.pop(context);
-              Navigator.push<void>(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (BuildContext context) => TasksScreen(
-                        user: UserModel(
-                            uid: FirebaseAuth.instance.currentUser!.uid,
-                            email: FirebaseAuth.instance.currentUser!.email,
-                            name: FirebaseAuth
-                                .instance.currentUser!.displayName)),
-                  ));
+              goBackToTaskList();
             },
           ),
         ),
@@ -269,34 +269,26 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
                   builder: (context) {
                     return AlertDialog(
                       title: const Text("Deleting task"),
-                      content: const Text(
-                          "Are you sure you want to delete the task?"),
+                      content: const Text("Do you want to delete the task?"),
                       actions: [
+                        TextButton(
+                          child: const Text("Yes"),
+                          onPressed: () {
+                            Database.deleteTask(Task(
+                                id: widget.task.id,
+                                title: _titleController.text,
+                                description: _descriptionController.text,
+                                userId:
+                                    FirebaseAuth.instance.currentUser!.uid));
+                            goBackToTaskList();
+                          },
+                        ),
                         TextButton(
                           child: const Text("No"),
                           onPressed: () {
                             Navigator.pop(context);
                           },
                         ),
-                        TextButton(
-                          child: const Text("Yes"),
-                          onPressed: () {
-                            removeTaskFormDatabase();
-                            Navigator.push<void>(
-                              context,
-                              MaterialPageRoute<void>(
-                                builder: (BuildContext context) => TasksScreen(
-                                    user: UserModel(
-                                        uid: FirebaseAuth
-                                            .instance.currentUser!.uid,
-                                        email: FirebaseAuth
-                                            .instance.currentUser!.email,
-                                        name: FirebaseAuth.instance.currentUser!
-                                            .displayName)),
-                              ),
-                            );
-                          },
-                        )
                       ],
                     );
                   });
@@ -305,42 +297,49 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
             backgroundColor: Colors.redAccent,
           ),
         ),
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : ListView.builder(
-                padding:
-                    const EdgeInsets.only(left: 24.0, top: 20.0, right: 24.0),
-                itemCount: 4 + _todos.length,
-                itemBuilder: (BuildContext context, int index) {
-                  if (index == 0) return titleTextField;
-                  if (index == 1) return descriptionTextField;
-                  if (index == 2)
-                    return /*dateTimeFiled*/ Padding(
+        body: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.only(
+                left: 24.0,
+                top: 20.0,
+                right: 24.0,
+              ),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: dateTimeButton,
-                    );
-                  if (index == 3 + _todos.length) {
-                    return newTodo;
-                  } else {
-                    return TodoItem(todo: _todos[index - 3]);
-                  }
-                }));
-  }
-
-  addTaskToDatabse() {
-    Database.postTaskToFirestore(Task(
-        id: widget.task.id,
-        title: _titleController.text,
-        description: _descriptionController.text,
-        userId: FirebaseAuth.instance.currentUser!.uid));
-  }
-
-  removeTaskFormDatabase() {
-    Database.deleteTask(Task(
-        id: widget.task.id,
-        title: _titleController.text,
-        description: _descriptionController.text,
-        userId: FirebaseAuth.instance.currentUser!.uid));
+                    ),
+                    titleTextField,
+                    descriptionTextField,
+                  ],
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.only(
+                left: 24.0,
+                right: 24.0,
+              ),
+              sliver: _isLoading
+                  ? const SliverFillRemaining(
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  : SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (BuildContext context, int index) {
+                          return index < _todos.length
+                              ? TodoItem(todo: _todos[index])
+                              : newTodo;
+                        },
+                        childCount: _todos.length + 1,
+                      ),
+                    ),
+            )
+          ],
+        ));
   }
 }
 
@@ -365,10 +364,9 @@ class _TodoItemState extends State<TodoItem> {
             onChanged: (value) {
               setState(() {
                 widget.todo.isDone = value;
+                Database.updateTodo(widget.todo);
               });
-              Database.updateTodo(widget.todo);
             },
-            //),
           ),
         ),
         const SizedBox(
@@ -378,8 +376,7 @@ class _TodoItemState extends State<TodoItem> {
           child: TextField(
             onSubmitted: (value) {
               setState(() {
-                if (value == "") {
-                } else {
+                if (value != "") {
                   widget.todo.title = value;
                   Database.updateTodo(widget.todo);
                 }
