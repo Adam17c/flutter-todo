@@ -42,7 +42,9 @@ class Task {
   static void sortByTimestamp(List<Task> tasks) {
     tasks.sort((a, b) {
       int result;
-      if (a.timestamp == null) {
+      if (a.timestamp == null && b.timestamp == null) {
+        result = a.id.compareTo(b.id);
+      } else if (a.timestamp == null) {
         result = 1;
       } else if (b.timestamp == null) {
         result = -1;

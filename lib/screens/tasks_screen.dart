@@ -36,7 +36,7 @@ class _TasksScreenState extends State<TasksScreen> {
     return MultiProvider(
       providers: [
         BlocProvider(
-          create: (context) => TasksListBloc(widget.user),
+          create: (context) => TasksListBloc(widget.user, _tasks),
         ),
         ChangeNotifierProvider(
           create: (context) => TaskListController(_tasks),
@@ -48,15 +48,9 @@ class _TasksScreenState extends State<TasksScreen> {
             context.read<TasksListBloc>().add(AddUncompletedTasks());
           }
           if (state is ShowOnlyUncompletedTasks) {
-            _tasks.clear();
-            _tasks.addAll(state.uncompletedTasks);
             menuText = 'Show completed tasks';
           }
-          if (state is ShowCompletedTasks) {
-            _tasks.clear();
-            _tasks.addAll(state.umcompletedAndCOmpletedTasks);
-            menuText = 'Hide completed tasks';
-          }
+          if (state is ShowCompletedTasks) menuText = 'Hide completed tasks';
           return Scaffold(
               floatingActionButton: Tooltip(
                 message: 'Add new task',
@@ -204,6 +198,7 @@ class _ListItemState extends State<ListItem> {
                   border: Border(
                       right: BorderSide(width: 1.0, color: Colors.white24))),
               child: Checkbox(
+                activeColor: Colors.blueAccent,
                 value: widget.task.isDone,
                 onChanged: (value) async {
                   setState(() {
@@ -270,9 +265,7 @@ class _ListItemState extends State<ListItem> {
             builder: (BuildContext context) => TaskEditScreen(task: task)));
   }
 
-  bool checkIfDarkModeIsOn() {
-    return Theme.of(context).brightness == Brightness.dark;
-  }
+  bool checkIfDarkModeIsOn() => Theme.of(context).brightness == Brightness.dark;
 }
 
 class TaskListController extends ChangeNotifier {

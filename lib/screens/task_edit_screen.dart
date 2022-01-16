@@ -67,10 +67,6 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
     super.dispose();
   }
 
-  bool checkIfDarkModeIsOn() {
-    return Theme.of(context).brightness == Brightness.dark;
-  }
-
   @override
   Widget build(BuildContext context) {
     final titleTextField = TextField(
@@ -341,6 +337,8 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
           ],
         ));
   }
+
+  bool checkIfDarkModeIsOn() => Theme.of(context).brightness == Brightness.dark;
 }
 
 class TodoItem extends StatefulWidget {

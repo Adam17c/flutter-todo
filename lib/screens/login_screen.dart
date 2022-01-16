@@ -91,19 +91,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
             switch (res) {
               case SignInResult.invalidEmail:
-                showSnackbar('Wrong email or password.');
+                showSnackbarMessage('Wrong email or password.');
                 break;
               case SignInResult.userDisabled:
-                showSnackbar('User with this email has been disabled.');
+                showSnackbarMessage('User with this email has been disabled.');
                 break;
               case SignInResult.userNotFound:
-                showSnackbar("User with this email doesn't exist.");
+                showSnackbarMessage("User with this email doesn't exist.");
                 break;
               case SignInResult.emailAlreadyInUse:
-                showSnackbar('An undefined error happened.');
+                showSnackbarMessage('An undefined error happened.');
                 break;
               case SignInResult.wrongPassword:
-                showSnackbar('Wrong email or password.');
+                showSnackbarMessage('Wrong email or password.');
                 break;
               case SignInResult.success:
                 Navigator.push<void>(
@@ -178,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void showSnackbar(String message) {
+  void showSnackbarMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(message),
     ));

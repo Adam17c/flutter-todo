@@ -11,7 +11,8 @@ part 'tasks_list_state.dart';
 enum TypeOfTasks { uncompleted, completed }
 
 class TasksListBloc extends Bloc<TasksListEvent, TasksListState> {
-  final User user;
+  final User _user;
+  final List<Task> _tasks;
 
   Future<List<Task>> getTasksAfterSecond(TypeOfTasks type) async {
     List<Future> futures = List.empty(growable: true);
@@ -19,10 +20,10 @@ class TasksListBloc extends Bloc<TasksListEvent, TasksListState> {
 
     switch (type) {
       case TypeOfTasks.uncompleted:
-        newTasks = Database.getUncomplitedTasksForUser(user);
+        newTasks = Database.getUncomplitedTasksForUser(_user);
         break;
       case TypeOfTasks.completed:
-        newTasks = Database.getComplitedTasksForUser(user);
+        newTasks = Database.getComplitedTasksForUser(_user);
         break;
     }
 
@@ -33,32 +34,25 @@ class TasksListBloc extends Bloc<TasksListEvent, TasksListState> {
     return newTasks;
   }
 
-  TasksListBloc(this.user) : super(TasksInitialState()) {
+  TasksListBloc(this._user, this._tasks) : super(TasksInitialState()) {
     on<TasksListEvent>((event, emit) async {
       if (event is AddUncompletedTasks) {
         emit(TasksLoadingState());
-        await getTasksAfterSecond(TypeOfTasks.uncompleted)
-            .then((value) => emit(ShowOnlyUncompletedTasks(value)));
+        await getTasksAfterSecond(TypeOfTasks.uncompleted).then((value) =>
+            {_tasks.addAll(value), emit(ShowOnlyUncompletedTasks())});
       } else if (event is AddCompletedTasks &&
           state is ShowOnlyUncompletedTasks) {
         {
-          List<Task> tasks =
-              List.from((state as ShowOnlyUncompletedTasks).uncompletedTasks)
-                ..removeWhere((task) => task.isDone == true);
           emit(TasksLoadingState());
           await getTasksAfterSecond(TypeOfTasks.completed).then((value) => {
-                tasks.addAll(value),
-                Task.sortByTimestamp(tasks),
-                emit(ShowCompletedTasks(tasks))
+                _tasks.addAll(value),
+                Task.sortByTimestamp(_tasks),
+                emit(ShowCompletedTasks())
               });
         }
       } else if (event is HideCompletedTasks && state is ShowCompletedTasks) {
-        if (state is ShowCompletedTasks) {
-          List<Task> tasks = List.from(
-              (state as ShowCompletedTasks).umcompletedAndCOmpletedTasks)
-            ..removeWhere((task) => task.isDone == true);
-          emit(ShowOnlyUncompletedTasks(tasks));
-        }
+        _tasks.removeWhere((task) => task.isDone == true);
+        emit(ShowOnlyUncompletedTasks());
       }
     });
   }

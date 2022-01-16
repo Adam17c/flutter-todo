@@ -16,8 +16,6 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  final ThemeMode mode = ThemeMode.dark;
-
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -26,8 +24,8 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             themeMode: Provider.of<ThemeController>(context).themeMode,
             darkTheme: ThemeData(
-                brightness: Brightness.dark,
-                appBarTheme: AppBarTheme(color: Colors.greenAccent)),
+              brightness: Brightness.dark,
+            ),
             debugShowCheckedModeBanner: false,
             home: const LoginScreen(),
           );
@@ -36,7 +34,7 @@ class MyApp extends StatelessWidget {
 }
 
 class ThemeController extends ChangeNotifier {
-  ThemeMode themeMode = ThemeMode.dark;
+  ThemeMode themeMode = ThemeMode.light;
 
   bool isDarkMode() => themeMode == ThemeMode.dark;
 

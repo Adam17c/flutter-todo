@@ -34,12 +34,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
         controller: nameTextController,
         keyboardType: TextInputType.name,
         validator: (name) {
-          final RegExp regex = RegExp(r'^.{3,}$');
+          final RegExp regex = RegExp(r'^.{1,}$');
           if (name!.isEmpty) {
             return ("Name cannot be empty");
           }
           if (!regex.hasMatch(name)) {
-            return ("Enter Valid name(Min. 3 Character)");
+            return ("Enter name with minimum one character");
           }
           return null;
         },
@@ -73,7 +73,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         if (email!.isEmpty) {
           return 'Please enter email address';
         } else if (!regex.hasMatch(email)) {
-          return "That doesn't look like an email address";
+          return "That isn't an email address";
         } else {
           return null;
         }
