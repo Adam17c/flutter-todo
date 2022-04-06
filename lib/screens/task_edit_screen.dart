@@ -110,36 +110,41 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
     final dateTimeButton = GestureDetector(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Container(
-          decoration: BoxDecoration(
-              border: Border.all(
-                  width: 1.0,
-                  color: checkIfDarkModeIsOn() ? Colors.white60 : Colors.black),
-              borderRadius: const BorderRadius.all(Radius.circular(5))),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(15.0),
-              child: Row(
-                children: <Widget>[
-                  Text(
-                      "Deadline:    " +
-                          (widget.task.timestamp != null
-                              ? DateFormat('dd-MM-yyyy')
-                                  .format(widget.task.timestamp!.toDate())
-                              : "Pick your deadline"),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: widget.task.timestamp != null
-                              ? checkIfDarkModeIsOn()
-                                  ? Colors.white60
-                                  : Colors.black
-                              : Colors.grey[700],
-                          fontSize: 18)),
-                  Expanded(
-                    child: Container(),
-                  ),
-                  const Icon(Icons.calendar_today)
-                ],
+        child: Material(
+          borderRadius: BorderRadius.circular(5),
+          elevation: 5.0,
+          child: Container(
+            decoration: BoxDecoration(
+                border: Border.all(
+                    width: 1.0,
+                    color:
+                        checkIfDarkModeIsOn() ? Colors.white60 : Colors.black),
+                borderRadius: const BorderRadius.all(Radius.circular(5))),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: Row(
+                  children: <Widget>[
+                    Text(
+                        "Deadline:    " +
+                            (widget.task.timestamp != null
+                                ? DateFormat('dd-MM-yyyy')
+                                    .format(widget.task.timestamp!.toDate())
+                                : "Pick your deadline"),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: widget.task.timestamp != null
+                                ? checkIfDarkModeIsOn()
+                                    ? Colors.white60
+                                    : Colors.black
+                                : Colors.grey[700],
+                            fontSize: 18)),
+                    Expanded(
+                      child: Container(),
+                    ),
+                    const Icon(Icons.calendar_today)
+                  ],
+                ),
               ),
             ),
           ),

@@ -39,7 +39,7 @@ class _TasksScreenState extends State<TasksScreen> {
           create: (context) => TasksListBloc(widget.user, _tasks),
         ),
         ChangeNotifierProvider(
-          create: (context) => TaskListController(_tasks),
+          create: (context) => ListController(_tasks),
         ),
       ],
       child: BlocBuilder<TasksListBloc, TasksListState>(
@@ -123,8 +123,7 @@ class _TasksScreenState extends State<TasksScreen> {
               ),
               body: state is TasksLoadingState
                   ? const Center(child: CircularProgressIndicator())
-                  : Consumer<TaskListController>(
-                      builder: (context, controller, _) {
+                  : Consumer<ListController>(builder: (context, controller, _) {
                       return ListView.builder(
                           padding: const EdgeInsetsDirectional.only(top: 20),
                           itemCount: _tasks.length,
@@ -146,7 +145,7 @@ class _TasksScreenState extends State<TasksScreen> {
 
 class ListItem extends StatefulWidget {
   final Task task;
-  final TaskListController tasksController;
+  final ListController tasksController;
   final bool fadeOutOnCheck;
 
   const ListItem({
@@ -268,13 +267,13 @@ class _ListItemState extends State<ListItem> {
   bool checkIfDarkModeIsOn() => Theme.of(context).brightness == Brightness.dark;
 }
 
-class TaskListController extends ChangeNotifier {
-  List<Task> tasks;
+class ListController extends ChangeNotifier {
+  List<Task> elements;
 
-  TaskListController(this.tasks);
+  ListController(this.elements);
 
   void remove(Task removedTask) {
-    tasks.remove(removedTask);
+    elements.remove(removedTask);
     notifyListeners();
   }
 }
